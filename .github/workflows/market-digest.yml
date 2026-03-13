@@ -1,0 +1,39 @@
+name: China Market Digest
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "30 1 * * 1-5"
+
+jobs:
+  build-and-send:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Generate digest and send email
+        env:
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USERNAME: ${{ secrets.SMTP_USERNAME }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          SMTP_USE_TLS: ${{ secrets.SMTP_USE_TLS }}
+          MAIL_FROM: ${{ secrets.MAIL_FROM }}
+          MAIL_TO: ${{ secrets.MAIL_TO }}
+          BAIDU_COOKIES: ${{ secrets.BAIDU_COOKIES }}
+        run: python scripts/market_digest.py
+
+      - name: Upload report artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: market-digest
+          path: reports/
